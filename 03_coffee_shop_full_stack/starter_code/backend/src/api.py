@@ -7,7 +7,7 @@ from flask import Flask, request
 
 from .database.models import db_drop_and_create_all, setup_db, Drink
 from .auth.auth import AuthError,requires_auth
-from collections.abc import Mapping
+
 app = Flask(__name__)
 setup_db(app)
 CORS(app)
@@ -18,7 +18,7 @@ CORS(app)
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 !! Running this funciton will add one
 '''
-db_drop_and_create_all()
+
 
 
 '''
@@ -32,6 +32,7 @@ db_drop_and_create_all()
 @app.route('/')
 def index():
   return '<h1>hello, you are succesfully connected </h1>'
+#this endpoint give you all drinks
 @app.route('/drinks')
 def drink():
  drinks=Drink.query.all()
@@ -52,7 +53,7 @@ def drink():
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks-detail', methods=['GET'])
-
+#this endpoint give you all drinks with persmzssion get 
 def aux():
   requires_auth('get:drinks-detail')
   drinks=Drink.query.all()
@@ -60,8 +61,7 @@ def aux():
   
   return jsonify({
         'success': True,
-        'drinks': [d.short() for d in drinks]
-    }), 200 
+        'drinks': [i.short() for i in drinks]}), 200 
 
 '''
 @TODO implement endpoint
@@ -72,6 +72,7 @@ def aux():
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
+#this endpoint help you post new drink
 @app.route('/drinks',methods=['POST'])
 def adddrink():
   try:
@@ -99,27 +100,41 @@ def adddrink():
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
         or appropriate status code indicating reason for failure
 '''
+#this endpoint  =help you modify drinks
 @app.route('/drinks/<drink_id>',methods=['PATCH'])
 def modifycoffe(drink_id):
  requires_auth('patch:drinks')
  req=request.get_json()
  try:
   drink_id=int(drink_id)
-  drink = Drink.query.filter(Drink.id ==drink_id).one_or_none()
-  if not drink:
+ 
+  alle=Drink.query.all()
+  aux=0
+  for i in alle:
+   if int(i.id)==int(drink_id):
+     break
+   
+  r=i 
+  print(r)
+ 
+  
+  if not r:
    abort(404)
   if(req['title']): 
-   drink.title=req['title']
-  print(",kkkk")
-  if req.dumps(req['recipe']):
-   drink.recipe=req.dumps(req['recipe'])
-  db.session.commit()
-  drink.update()
-  print(",kkkk")
+   r.title=req['title']
+
+  if req['recipe']:
+ 
+   r.recipe=json.dumps(req['recipe'])
+ 
+ 
+  print("final")
+  r.update()
+
  except Exception:
         abort(400)
  
- return jsonify({'success': True, 'drinks': [drink.long()]}), 200
+ return jsonify({'success': True, 'drinks': [r.long()]}), 200
 
 '''
 @TODO implement endpoint
@@ -131,7 +146,7 @@ def modifycoffe(drink_id):
     returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
         or appropriate status code indicating reason for failure
 '''
-@app.route('/drinks/<idt>',methods=['DELETE'])
+"""@app.route('/drinks/<idt>',methods=['DELETE'])
 def delete(idt):
   requires_auth('delete:drinks')
   drink = Drink.query.filter(Drink.id ==idt).one_or_none()
@@ -141,7 +156,8 @@ def delete(idt):
    drink.delete()
   except Exception:
    abort(404)
-  return   {"success": True, "delete": idt}
+  return  jsonify({"success": True, "delete": idt})
+ """
   
    
    
@@ -157,7 +173,7 @@ def delete(idt):
 Example error handling for unprocessable entity
 '''
 
-
+#handel the 422 error
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
@@ -165,7 +181,7 @@ def unprocessable(error):
         "error": 422,
         "message": "unprocessable"
     }), 422
-
+#handel the 404 error
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({
@@ -174,7 +190,7 @@ def not_found(error):
         "message": "resource not found"
     }), 404
 
-
+#handel authintication error
 @app.errorhandler(AuthError)
 def auth_error(error):
     print(error)
@@ -184,7 +200,7 @@ def auth_error(error):
         "message": error.error['description']
     }), error.status_code
 
-
+#handel the 401  error
 @app.errorhandler(401)
 def unauthorized(error):
     print(error)

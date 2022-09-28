@@ -3,13 +3,13 @@ import json
 from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
-
+from collections.abc import Mapping
 
 app = Flask(__name__)
-
-AUTH0_DOMAIN = 'dev-c6rrq8f6.us.auth0.com'
+#setting of auth0
+AUTH0_DOMAIN = 'dev-6fmk8k0v.us.auth0.com'
 ALGORITHMS = ['RS256']
-API_AUDIENCE = 'image'
+API_AUDIENCE = 'coffe'
 
 
 class AuthError(Exception):
@@ -17,7 +17,7 @@ class AuthError(Exception):
         self.error = error
         self.status_code = status_code
 
-
+#verify the structure of the jwt 
 def get_token_auth_header():
     """Obtains the Access Token from the Authorization Header
     """
@@ -50,7 +50,7 @@ def get_token_auth_header():
     token = parts[1]
     return token
 
-
+#decode jwt 
 def verify_decode_jwt(token):
     jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
     jwks = json.loads(jsonurl.read())
@@ -104,7 +104,7 @@ def verify_decode_jwt(token):
                 'description': 'Unable to find the appropriate key.'
             }, 400)
 
-
+#this is the autentification function that give access to certain permession
 def requires_auth(f):
         token = get_token_auth_header()
         try:
