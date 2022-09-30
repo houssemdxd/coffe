@@ -31,6 +31,7 @@ CORS(app)
 '''
 @app.route('/')
 def index():
+ 
   return '<h1>hello, you are succesfully connected </h1>'
 #this endpoint give you all drinks
 @app.route('/drinks')
@@ -52,10 +53,12 @@ def drink():
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+
 @app.route('/drinks-detail', methods=['GET'])
+@requires_auth('get:drinks-detail')
 #this endpoint give you all drinks with persmzssion get 
-def aux():
-  requires_auth('get:drinks-detail')
+def aux(payload):
+ 
   drinks=Drink.query.all()
 
   
@@ -74,13 +77,18 @@ def aux():
 '''
 #this endpoint help you post new drink
 @app.route('/drinks',methods=['POST'])
-def adddrink():
+@requires_auth('post:drinks')
+def adddrink(payload):
   try:
-   requires_auth('post:drinks')
+  
    drink=Drink()
    req = request.get_json()
    drink.title=req['title']
+   
    drink.recipe=json.dumps(req['recipe'])
+   print(type(req['recipe']))
+   print(req['recipe'])
+   
    drink.insert()
   except:
    abort(400) 
@@ -102,8 +110,9 @@ def adddrink():
 '''
 #this endpoint  =help you modify drinks
 @app.route('/drinks/<drink_id>',methods=['PATCH'])
-def modifycoffe(drink_id):
- requires_auth('patch:drinks')
+@requires_auth('patch:drinks')
+def modifycoffe(payload,drink_id):
+
  req=request.get_json()
  try:
   drink_id=int(drink_id)
@@ -115,17 +124,22 @@ def modifycoffe(drink_id):
      break
    
   r=i 
-  print(r)
+  
  
   
   if not r:
    abort(404)
+
   if(req['title']): 
    r.title=req['title']
-
-  if req['recipe']:
+  
  
-   r.recipe=json.dumps(req['recipe'])
+  if req['recipe'] is None:
+  
+   r.update()
+  else:
+    r.recipe=json.dumps(req['recipe'])
+    print(json.dumps(req['recipe']))
  
  
   print("final")
@@ -146,9 +160,10 @@ def modifycoffe(drink_id):
     returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
         or appropriate status code indicating reason for failure
 '''
-"""@app.route('/drinks/<idt>',methods=['DELETE'])
-def delete(idt):
-  requires_auth('delete:drinks')
+@app.route('/drinks/<idt>',methods=['DELETE'])
+@requires_auth('delete:drinks')
+def delete(payload,idt):
+ 
   drink = Drink.query.filter(Drink.id ==idt).one_or_none()
   if not drink:
    abort(404)
@@ -157,7 +172,7 @@ def delete(idt):
   except Exception:
    abort(404)
   return  jsonify({"success": True, "delete": idt})
- """
+ 
   
    
    

@@ -4,6 +4,11 @@ from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
 from collections.abc import Mapping
+# use as @functools.wraps()
+import functools
+
+# use directly as @wraps()
+from functools import wraps
 
 app = Flask(__name__)
 #setting of auth0
@@ -105,13 +110,18 @@ def verify_decode_jwt(token):
             }, 400)
 
 #this is the autentification function that give access to certain permession
-def requires_auth(f):
+def requires_auth(permission=''):
+  def requires_auth_decorator(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
         token = get_token_auth_header()
         try:
             payload = verify_decode_jwt(token)
         except:
             abort(401)
-        return payload
-
+        return f(payload, *args, **kwargs)
+    
+    return wrapper
+  return  requires_auth_decorator  
 
 
